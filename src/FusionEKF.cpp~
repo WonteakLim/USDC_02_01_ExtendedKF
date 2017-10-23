@@ -60,8 +60,6 @@ void FusionEKF::ProcessMeasurement(const MeasurementPackage &measurement_pack) {
     */
     // first measurement
     cout << "EKF: " << endl;
-    previous_timestamp_ = measurement_pack.timestamp_;
-
     VectorXd x = VectorXd(4);
     x << 0, 0, 0, 0;
 
@@ -116,8 +114,7 @@ void FusionEKF::ProcessMeasurement(const MeasurementPackage &measurement_pack) {
 
       ekf_.Init( x, P, F, H_laser_, R_laser_, Q);
     }
-  
-    cout << ekf_.x_(0) << ", " << ekf_.x_(1) << ", " << ekf_.x_(2) << ", " << ekf_.x_(3) << endl;  
+   
     // done initializing, no need to predict or update
     is_initialized_ = true;
     return;

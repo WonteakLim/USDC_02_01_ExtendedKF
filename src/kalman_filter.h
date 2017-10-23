@@ -64,6 +64,11 @@ public:
    */
   void UpdateEKF(const Eigen::VectorXd &z);
 
+  /**
+  * Normalize anlge -pi ~ pi
+  */
+  float NormalizeAngle( const float rad ); 
+
 };
 
 #endif /* KALMAN_FILTER_H_ */

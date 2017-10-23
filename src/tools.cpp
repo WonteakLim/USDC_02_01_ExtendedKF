@@ -1,4 +1,6 @@
 #include <iostream>
+#include <cmath>
+#define _USE_MATH_DEFINES
 #include "tools.h"
 
 using Eigen::VectorXd;
@@ -15,7 +17,9 @@ VectorXd Tools::CalculateRMSE(const vector<VectorXd> &estimations,
   TODO:
     * Calculate the RMSE here.
   */
-  VectorXd rmse = VecterXd(4);
+  //cout << "Tools" << endl;
+
+  VectorXd rmse = VectorXd(4);
   rmse << 0, 0, 0, 0;
 
   if( estimations.size() ==0 || (estimations.size() != ground_truth.size() ) )
@@ -39,6 +43,8 @@ MatrixXd Tools::CalculateJacobian(const VectorXd& x_state) {
   TODO:
     * Calculate a Jacobian here.
   */
+  //cout << "Jacobian" << endl;
+
   MatrixXd Hj(3,4);
   float px = x_state(0);
   float py = x_state(1);
@@ -46,7 +52,7 @@ MatrixXd Tools::CalculateJacobian(const VectorXd& x_state) {
   float vy = x_state(3);
 
   // check division by zero
-  if( (px==0) || (py==0) )
+  if( (px==0) && (py==0) )
   {
     cout << "Error" << endl;
     return Hj;
@@ -56,9 +62,11 @@ MatrixXd Tools::CalculateJacobian(const VectorXd& x_state) {
   double dLen = sqrt( px*px + py*py );
   double dPart1 = py*(vx*py - vy*px );
   double dPart2 = px*(vy*px - vx*py );
-  Hj << px/dLen, py/dLen, 0, 9,
-	-py/pow(dLen,3), px/pow(dLen,2), 0, 0,
+  Hj << px/dLen, py/dLen, 0, 0,
+	-py/pow(dLen,2), px/pow(dLen,2), 0, 0,
 	dPart1/pow(dLen,3), dPart2/pow(dLen,3), px/dLen, py/dLen;
 
   return Hj;
 }
+
+
