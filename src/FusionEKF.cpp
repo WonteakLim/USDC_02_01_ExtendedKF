@@ -14,7 +14,7 @@ using std::vector;
 FusionEKF::FusionEKF() {
   is_initialized_ = false;
 
-  previous_timestamp_ = 0;
+  previous_timestamp_ = -1;
 
   // initializing matrices
   R_laser_ = MatrixXd(2, 2);
@@ -24,7 +24,7 @@ FusionEKF::FusionEKF() {
 
   //measurement covariance matrix - laser
   R_laser_ << 0.0225, 0,
-              0, 0.0225;
+        0, 0.0225;
 
   //measurement covariance matrix - radar
   R_radar_ << 0.09, 0, 0,
@@ -60,8 +60,6 @@ void FusionEKF::ProcessMeasurement(const MeasurementPackage &measurement_pack) {
     */
     // first measurement
     cout << "EKF: " << endl;
-    previous_timestamp_ = measurement_pack.timestamp_;
-
     VectorXd x = VectorXd(4);
     x << 0, 0, 0, 0;
 
@@ -78,11 +76,13 @@ void FusionEKF::ProcessMeasurement(const MeasurementPackage &measurement_pack) {
 	 1, 0, 1, 0,
 	 0, 1, 0, 1;
 
-    P = MatrixXd(4,4);
-    P << 0.0005, 0, 0, 0,
-         0, 0.0015, 0, 0,
-         0, 0, 0.159, 0,
-         0, 0, 0, 0.04489;
+    P = MatrixXd(4,4);    
+    P << 1, 0, 0, 0,
+         0, 1, 0, 0,
+         0, 0, 1, 0,
+         0, 0, 0, 1;
+
+    printf("EKF initialization...\n");
 
     if (measurement_pack.sensor_type_ == MeasurementPackage::RADAR) {
       /**
@@ -100,7 +100,11 @@ void FusionEKF::ProcessMeasurement(const MeasurementPackage &measurement_pack) {
            0.0,
            0.0;
 
+      cout << "x: " << x;
+
       ekf_.Init( x, P, F, Hj_, R_radar_, Q);
+
+      printf("RADAR initialization...\n");
     }
     else if (measurement_pack.sensor_type_ == MeasurementPackage::LASER) {
       /**
@@ -114,10 +118,13 @@ void FusionEKF::ProcessMeasurement(const MeasurementPackage &measurement_pack) {
       H_laser_ << 1, 0, 0, 0,
 		  0, 1, 0, 0;
 
+      cout << "x: " << x;
+
       ekf_.Init( x, P, F, H_laser_, R_laser_, Q);
+
+      printf("LIDAR initialization...\n");
     }
-  
-    cout << ekf_.x_(0) << ", " << ekf_.x_(1) << ", " << ekf_.x_(2) << ", " << ekf_.x_(3) << endl;  
+   
     // done initializing, no need to predict or update
     is_initialized_ = true;
     return;
@@ -137,7 +144,12 @@ void FusionEKF::ProcessMeasurement(const MeasurementPackage &measurement_pack) {
 
    // Calculate duaration time
   float dt = ( measurement_pack.timestamp_ - previous_timestamp_ ) / 1000000.0;
+  if( previous_timestamp_ < 0 ){
+      dt = 0.05;
+  }
   previous_timestamp_ = measurement_pack.timestamp_;
+
+  cout << "dt: " << dt << endl;
 
   // Update matrix F
   ekf_.F_(0,2) = dt;
@@ -153,7 +165,11 @@ void FusionEKF::ProcessMeasurement(const MeasurementPackage &measurement_pack) {
   // Prediction
  
   ekf_.Predict();
-  
+  cout << "[Prediction]" << endl;
+  cout << "x: " << ekf_.x_ << endl;
+  cout << "P: " << ekf_.P_ << endl; 
+  cout << "F: " << ekf_.F_ << endl;
+  cout << "Q: " << ekf_.Q_ << endl;
   
 
   /*****************************************************************************
@@ -181,7 +197,7 @@ void FusionEKF::ProcessMeasurement(const MeasurementPackage &measurement_pack) {
   }
   
 
-  // print the output
+ // print the output
   cout << "x_ = " << ekf_.x_(0) <<", " << ekf_.x_(1) <<", " << ekf_.x_(2) << ", " << ekf_.x_(3) << ", " << 
 	measurement_pack.raw_measurements_(1) << endl;
   cout << "P_ = " << ekf_.P_ << endl;
